@@ -88,7 +88,7 @@
             grid[idx] = 1;
 
             // Calculate color - hue rotates once per 1000 pixels
-            const hue = (pixelCount % 1000) / 1000;
+            const hue = (pixelCount % 10000) / 10000;
             const [r, g, b] = hslToRgb(hue, 1, 0.5);
 
             const imgIdx = idx * 4;
@@ -186,7 +186,7 @@
 
         function animate() {
             // Process multiple particles per frame for speed
-            const particlesPerFrame = Math.max(1, Math.floor(width / 50));
+            const particlesPerFrame = Math.max(1, Math.floor(width / 50)) * 20;
 
             for (let i = 0; i < particlesPerFrame; i++) {
                 simulateParticle();
