@@ -17,10 +17,23 @@
         canvas {
             display: block;
         }
+        #overlay {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 14px;
+            border-radius: 4px;
+            white-space: pre;
+        }
     </style>
 </head>
 <body>
     <canvas id="canvas"></canvas>
+    <div id="overlay"></div>
     <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
@@ -30,6 +43,13 @@
         let imageData;
         let pixelCount = 0;
         let animationId = null;
+
+        // Timing tracking
+        const overlay = document.getElementById('overlay');
+        let timeSimulate = 0;
+        let timePutImage = 0;
+        let timeWaiting = 0;
+        let lastFrameEnd = 0;
 
         function init() {
             if (animationId) {
@@ -55,6 +75,10 @@
             ctx.fillRect(0, 0, width, height);
 
             pixelCount = 0;
+            timeSimulate = 0;
+            timePutImage = 0;
+            timeWaiting = 0;
+            lastFrameEnd = performance.now();
             animate();
         }
 
@@ -185,16 +209,36 @@
         }
 
         function animate() {
+            const frameStart = performance.now();
+            timeWaiting += frameStart - lastFrameEnd;
+
             // Process multiple particles per frame for speed
             const particlesPerFrame = Math.max(1, Math.floor(width / 50)) * 20;
 
+            const simStart = performance.now();
             for (let i = 0; i < particlesPerFrame; i++) {
                 simulateParticle();
             }
+            timeSimulate += performance.now() - simStart;
 
             // Draw the updated image
+            const putStart = performance.now();
             ctx.putImageData(imageData, 0, 0);
+            timePutImage += performance.now() - putStart;
 
+            // Update overlay
+            const total = timeSimulate + timePutImage + timeWaiting;
+            if (total > 0) {
+                const pctSimulate = Math.round(100 * timeSimulate / total);
+                const pctPutImage = Math.round(100 * timePutImage / total);
+                const pctWaiting = Math.round(100 * timeWaiting / total);
+                overlay.textContent =
+                    `simulate: ${pctSimulate}%\n` +
+                    `putImage: ${pctPutImage}%\n` +
+                    `waiting:  ${pctWaiting}%`;
+            }
+
+            lastFrameEnd = performance.now();
             animationId = requestAnimationFrame(animate);
         }
 
